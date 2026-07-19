@@ -1,0 +1,39 @@
+{
+  "name": "@lyeve/cms-client-realtime",
+  "version": "0.1.0",
+  "description": "Realtime clients for LyEve CMS - WebSocket pub/sub and Server-Sent Events",
+  "license": "MIT",
+  "author": "LyEve Labs <hello@lyeve.com>",
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": { "node": ">=20" },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "!dist/**/*.test.*"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup && publint",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@lyeve/cms-client": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@lyeve/cms-client": "file:../cms-client",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "publint": "^0.3.0",
+    "prettier": "^3.4.0"
+  }
+}
