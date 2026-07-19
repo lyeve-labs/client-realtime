@@ -1,0 +1,52 @@
+{
+  "name": "@lyeve-labs/client-realtime",
+  "version": "0.1.6",
+  "description": "Realtime clients for LyEve Core - WebSocket pub/sub and Server-Sent Events",
+  "license": "MIT",
+  "author": "LyEve <info@lyeve.com>",
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && publint",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "tsup --watch",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "peerDependencies": {
+    "@lyeve-labs/client": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@lyeve-labs/client": "^0.2.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "publint": "^0.3.0",
+    "prettier": "^3.4.0"
+  }
+}
