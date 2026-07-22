@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@lyeve/cms-client':
-        specifier: file:../cms-client
-        version: file:../cms-client
+        specifier: ^0.1.0
+        version: 0.1.0
       prettier:
         specifier: ^3.4.0
         version: 3.9.6
@@ -336,8 +336,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lyeve/cms-client@file:../cms-client':
-    resolution: {directory: ../cms-client, type: directory}
+  '@lyeve/cms-client@0.1.0':
+    resolution: {integrity: sha512-j2qO4pC1OSwJGVDrRzrD/BWY1bTg5J2ddqZEwp4wt7h52bDopd2EHX9bj0c5Ke4TRhfDZRL0+MYfvwG8U8//ug==}
     engines: {node: '>=20'}
 
   '@publint/pack@0.1.5':
@@ -1033,7 +1033,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lyeve/cms-client@file:../cms-client': {}
+  '@lyeve/cms-client@0.1.0': {}
 
   '@publint/pack@0.1.5':
     dependencies:
