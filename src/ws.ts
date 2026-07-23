@@ -11,6 +11,8 @@ export interface WSClientConfig {
 	baseUrl: string;
 	/** Topic to subscribe to (passed as query param). */
 	topic?: string;
+	/** Auth token sent as query param. */
+	token?: string;
 	/** Max reconnect attempts (default: 10). */
 	maxReconnectAttempts?: number;
 	/** Reconnect base delay in ms (default: 1000). */
@@ -50,7 +52,7 @@ export class WSClient {
 
 	/** Open the WebSocket connection. Idempotent. */
 	connect(): void {
-		if (this.#ws && this.status === 'connected') return;
+		if (this.#ws && (this.status === 'connected' || this.status === 'connecting')) return;
 
 		this.#mounted = true;
 		this.#clearReconnectTimer();
@@ -58,6 +60,7 @@ export class WSClient {
 
 		const url = new URL('/api/v1/ws/connect', this.#config.baseUrl.replace(/^http/, 'ws'));
 		if (this.#config.topic) url.searchParams.set('topic', this.#config.topic);
+		if (this.#config.token) url.searchParams.set('token', this.#config.token);
 
 		const ws = new WebSocket(url.toString());
 		this.#ws = ws;
