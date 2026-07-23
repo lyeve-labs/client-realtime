@@ -8,16 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.2] - 2026-07-24
 
-### Changed
-
-- SSE client class now named `SSEClient` for consistency with the generic `WSClient` naming.
-
-## [0.1.1] - 2026-07-24
-
 ### Fixed
 
 - SSE and WebSocket re-entrant connect guards now check both `connected` and `connecting` states, preventing duplicate connections during rapid connect/disconnect sequences.
 - WebSocket client sends auth token as a query parameter when configured.
+
+### Changed
+
+- SSE client class now named `SSEClient` for consistency with the generic `WSClient` naming.
 
 ## [0.1.0] - 2026-07-23
 
