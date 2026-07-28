@@ -1,0 +1,56 @@
+name: Bug report
+description: Something is broken in the client SDK.
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more concrete the repro,
+        the faster we can fix it.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The npm version you are using.
+      placeholder: '0.2.0'
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Node.js version and environment (browser, server, etc.).
+      placeholder: 'Node 20.x, browser (Chrome 130)'
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Observed vs expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code that shows the problem.
+      render: ts
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - 'Critical -- app broken'
+        - 'Major -- feature broken, no workaround'
+        - 'Minor -- workaround exists'
+        - 'Cosmetic'
+    validations:
+      required: true
