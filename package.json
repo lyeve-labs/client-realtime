@@ -35,7 +35,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && publint",
+    "build": "tsup && publint && node scripts/check-dist.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "dev": "tsup --watch",
