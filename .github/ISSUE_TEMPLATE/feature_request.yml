@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest a new feature or improvement.
-labels: ['enhancement', 'triage']
+labels: ["enhancement", "triage"]
 body:
   - type: textarea
     id: problem
@@ -27,5 +27,5 @@ body:
     attributes:
       label: Would this be a breaking change?
       options:
-        - label: 'Yes, this changes the existing API'
-        - label: 'No, this is purely additive'
+        - label: "Yes, this changes the existing API"
+        - label: "No, this is purely additive"

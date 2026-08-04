@@ -35,6 +35,8 @@ for (const file of files) {
 if (bad.length) {
   console.error(`${pkg.name}: dist imports undeclared @lyeve packages:`);
   for (const line of [...new Set(bad)]) console.error(`  ${line}`);
-  console.error("Declare them in dependencies/peerDependencies, or fix the import.");
+  console.error(
+    "Declare them in dependencies/peerDependencies, or fix the import.",
+  );
   process.exit(1);
 }

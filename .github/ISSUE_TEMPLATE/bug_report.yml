@@ -1,6 +1,6 @@
 name: Bug report
 description: Something is broken in the client SDK.
-labels: ['bug', 'triage']
+labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
@@ -13,7 +13,7 @@ body:
     attributes:
       label: Version
       description: The npm version you are using.
-      placeholder: '0.2.0'
+      placeholder: "0.2.0"
     validations:
       required: true
 
@@ -22,7 +22,7 @@ body:
     attributes:
       label: Runtime
       description: Node.js version and environment (browser, server, etc.).
-      placeholder: 'Node 20.x, browser (Chrome 130)'
+      placeholder: "Node 20.x, browser (Chrome 130)"
     validations:
       required: true
 
@@ -48,9 +48,9 @@ body:
     attributes:
       label: Severity
       options:
-        - 'Critical -- app broken'
-        - 'Major -- feature broken, no workaround'
-        - 'Minor -- workaround exists'
-        - 'Cosmetic'
+        - "Critical -- app broken"
+        - "Major -- feature broken, no workaround"
+        - "Minor -- workaround exists"
+        - "Cosmetic"
     validations:
       required: true
