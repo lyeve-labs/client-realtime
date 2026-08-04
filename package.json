@@ -1,6 +1,6 @@
 {
   "name": "@lyeve-labs/client-realtime",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Realtime clients for LyEve Core - WebSocket pub/sub and Server-Sent Events",
   "license": "MIT",
   "author": "LyEve <info@lyeve.com>",
