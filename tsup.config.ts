@@ -6,5 +6,4 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
-  external: ["@lyeve-labs/client"],
 });

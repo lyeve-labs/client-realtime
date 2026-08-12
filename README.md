@@ -6,7 +6,7 @@ Realtime clients for LyEve Core. WebSocket pub/sub and Server-Sent Events.
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg)](https://www.typescriptlang.org)
 
 ```bash
-pnpm add @lyeve-labs/client @lyeve-labs/client-realtime
+pnpm add @lyeve-labs/client-realtime
 ```
 
 ```ts
@@ -42,14 +42,13 @@ Two transports, one package. Reconnect, filter, stream.
 ## Requirements
 
 - **Node 20** or newer
-- **[@lyeve-labs/client](https://www.npmjs.com/package/@lyeve-labs/client)** `>=0.1.0`
 
 ## Install
 
 ```bash
-pnpm add @lyeve-labs/client @lyeve-labs/client-realtime
-# or npm install @lyeve-labs/client @lyeve-labs/client-realtime
-# or yarn add @lyeve-labs/client @lyeve-labs/client-realtime
+pnpm add @lyeve-labs/client-realtime
+# or npm install @lyeve-labs/client-realtime
+# or yarn add @lyeve-labs/client-realtime
 ```
 
 ## Use

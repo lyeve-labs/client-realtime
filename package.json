@@ -43,11 +43,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "peerDependencies": {
-    "@lyeve-labs/client": ">=0.1.0"
-  },
   "devDependencies": {
-    "@lyeve-labs/client": "^0.2.0",
     "tsup": "^8.4.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
