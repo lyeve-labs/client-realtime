@@ -1,0 +1,5 @@
+# Pinned to match CI and the node:24 base images. Bump here first, then the
+# workflow and Dockerfile tags, so local, CI, and container runtimes stay aligned.
+[tools]
+node = "24"
+pnpm = "10.33.4"

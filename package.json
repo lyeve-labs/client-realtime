@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "LyEve <info@lyeve.com>",
   "type": "module",
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.33.4",
   "engines": {
     "node": ">=20"
   },
