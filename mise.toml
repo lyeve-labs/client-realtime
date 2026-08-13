@@ -1,5 +1,7 @@
-# Pinned to match CI and the node:24 base images. Bump here first, then the
-# workflow and Dockerfile tags, so local, CI, and container runtimes stay aligned.
+# Exact versions, never ranges. mise resolves a range to whichever patch is newest
+# when it installs, so one file can leave two machines, or a machine and CI, on
+# different toolchains. Bump here first, then the workflow and Dockerfile tags, so
+# local, CI and container runtimes stay aligned.
 [tools]
-node = "24"
+node = "24.19.0"
 pnpm = "10.33.4"
