@@ -1,7 +1,7 @@
 // Fails the build when dist references a @lyeve* package that is not this
 // package itself and not a declared dependency. Catches the case that shipped
 // broken 0.1.x/0.2.x tarballs: a scope rename landed in src but the published
-// artifact still imported the retired @lyeve/cms-* packages, so consumers hit
+// artifact still imported the retired @lyeve-labs/* packages, so consumers hit
 // ERR_MODULE_NOT_FOUND on first import.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
