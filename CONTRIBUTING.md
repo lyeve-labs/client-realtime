@@ -44,6 +44,21 @@ pnpm build          # ensure tsup + publint pass
 
 CI runs the same set on every PR.
 
+## Branches
+
+Two permanent branches, both merge-only:
+
+- **`dev`** is integration and always deployable to staging. Every change starts
+  here: branch off `dev`, open a PR back into `dev`.
+- **`main`** is production and carries the release tags.
+
+Branch names are `<type>/<slug>`, where type is one of `feat` `fix` `hotfix`
+`chore` `docs` `refactor` `perf` `test` `ci`. Rebase onto `dev` rather than
+merging `dev` into your branch. Only a hotfix branches off `main`, and it must
+be merged back into `dev` afterwards.
+
+One logical change per branch.
+
 ## Commits
 
 We use Conventional Commits:
