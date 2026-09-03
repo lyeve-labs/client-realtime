@@ -11,6 +11,7 @@ class MockWebSocket {
   static CLOSED = 3;
 
   url: string;
+  protocols: string | string[] | undefined;
   readyState = MockWebSocket.CONNECTING;
   onopen: ((e: Event) => void) | null = null;
   onmessage: ((e: MessageEvent) => void) | null = null;
@@ -19,8 +20,9 @@ class MockWebSocket {
   close = vi.fn();
   send = vi.fn();
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url;
+    this.protocols = protocols;
     MockWebSocket.instances.push(this);
   }
 
@@ -232,6 +234,54 @@ describe("WSClient", () => {
 
       vi.advanceTimersByTime(20);
       expect(MockWebSocket.instances.length).toBe(2);
+    });
+
+    it("keeps the token out of the URL", () => {
+      const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1LTEifQ.c2ln-_x";
+
+      createWSClient({ baseUrl, topic: "content:article", token }).connect();
+
+      const { url } = latestWs();
+      expect(url).not.toContain(token);
+      expect(url).not.toContain("token=");
+      expect(url).toBe(
+        "ws://localhost:3001/api/v1/ws/connect?topic=content%3Aarticle",
+      );
+    });
+
+    it("offers the token as a subprotocol entry", () => {
+      const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1LTEifQ.c2ln-_x";
+
+      createWSClient({ baseUrl, token }).connect();
+
+      expect(latestWs().protocols).toEqual([
+        "lyeve.v1",
+        `lyeve.bearer.${token}`,
+      ]);
+    });
+
+    it("offers the plain subprotocol when no token is configured", () => {
+      createWSClient({ baseUrl }).connect();
+
+      expect(latestWs().protocols).toEqual(["lyeve.v1"]);
+    });
+
+    it("re-offers the token on reconnect", () => {
+      vi.useFakeTimers();
+      const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1LTEifQ.c2ln-_x";
+      const client = createWSClient({ baseUrl, token, reconnectBaseDelay: 10 });
+      client.connect();
+      latestWs().simulateOpen();
+
+      latestWs().simulateClose(1006, "timeout");
+      vi.advanceTimersByTime(20);
+
+      expect(MockWebSocket.instances.length).toBe(2);
+      expect(latestWs().protocols).toEqual([
+        "lyeve.v1",
+        `lyeve.bearer.${token}`,
+      ]);
+      expect(latestWs().url).not.toContain(token);
     });
 
     it("does not reconnect after normal close (code 1000)", () => {
