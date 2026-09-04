@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- The WebSocket client no longer puts `token` in the connect URL. It offers the credential as a `Sec-WebSocket-Protocol` entry, `lyeve.bearer.<token>`, alongside the plain `lyeve.v1` entry the server selects. A query string reaches proxy access logs, browser history and `Referer`, which is three copies of a live session credential that nobody audits. No server ever read the query parameter, so nothing that worked stops working.
+
 ## [0.1.9] - 2026-09-02
 
 ### Changed
