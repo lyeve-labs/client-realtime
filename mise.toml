@@ -3,5 +3,5 @@
 # different toolchains. Bump here first, then the workflow and Dockerfile tags, so
 # local, CI and container runtimes stay aligned.
 [tools]
-node = "24.19.0"
-pnpm = "10.33.4"
+node = "26.8.1"
+pnpm = "11.25.0"

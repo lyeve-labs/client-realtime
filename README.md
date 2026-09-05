@@ -61,6 +61,7 @@ import { createWSClient } from "@lyeve-labs/client-realtime";
 const ws = createWSClient({
   baseUrl: "http://localhost:3001",
   topic: "content:articles",
+  token: sessionToken,
   // optional overrides:
   maxReconnectAttempts: 10,
   reconnectBaseDelay: 200,
@@ -75,6 +76,20 @@ ws.on("error", (err) => console.error(err));
 ws.connect();
 // Later: ws.close();
 ```
+
+`token` never reaches the URL. A browser cannot set request headers on a
+WebSocket handshake but it can offer subprotocols, so the credential goes
+there:
+
+```
+Sec-WebSocket-Protocol: lyeve.v1, lyeve.bearer.<token>
+```
+
+The server selects `lyeve.v1` in its response, which is what makes the browser
+accept the handshake. Query strings are written to proxy access logs, kept in
+browser history and sent on in `Referer`, so a credential must not travel in
+one. Earlier releases of this package put it there; the server never read it,
+and it is gone.
 
 ### SSE
 

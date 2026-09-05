@@ -5,6 +5,26 @@
  * Supports auto-reconnect with exponential backoff.
  */
 
+/**
+ * The application subprotocol. The server selects this entry in its response,
+ * which is what makes a browser accept a handshake that also offered a
+ * credential entry.
+ */
+const SUBPROTOCOL = "lyeve.v1";
+
+/**
+ * Prefix marking the subprotocol entry that carries the credential.
+ *
+ * A browser cannot set request headers on a WebSocket handshake, which is why
+ * the credential used to travel in the query string. Query strings are written
+ * to proxy access logs, kept in browser history and sent on in Referer, so the
+ * credential goes here instead: a subprotocol entry is a request header a
+ * browser will set, and it is not part of the URL. Both credential shapes the
+ * platform issues, a session JWT and an API key, fit the header grammar
+ * without encoding.
+ */
+const BEARER_SUBPROTOCOL_PREFIX = "lyeve.bearer.";
+
 export type WSStatus =
   "idle" | "connecting" | "connected" | "disconnected" | "error";
 
@@ -12,7 +32,7 @@ export interface WSClientConfig {
   baseUrl: string;
   /** Topic to subscribe to (passed as query param). */
   topic?: string;
-  /** Auth token sent as query param. */
+  /** Auth token, offered as a Sec-WebSocket-Protocol entry. Never in the URL. */
   token?: string;
   /** Max reconnect attempts (default: 10). */
   maxReconnectAttempts?: number;
@@ -71,9 +91,16 @@ export class WSClient {
       this.#config.baseUrl.replace(/^http/, "ws"),
     );
     if (this.#config.topic) url.searchParams.set("topic", this.#config.topic);
-    if (this.#config.token) url.searchParams.set("token", this.#config.token);
 
-    const ws = new WebSocket(url.toString());
+    // The plain entry is always offered so the server has something to select.
+    // Both the browser WebSocket and the Node one take the same argument, so
+    // there is one code path for either.
+    const protocols = [SUBPROTOCOL];
+    if (this.#config.token) {
+      protocols.push(BEARER_SUBPROTOCOL_PREFIX + this.#config.token);
+    }
+
+    const ws = new WebSocket(url.toString(), protocols);
     this.#ws = ws;
 
     ws.onopen = () => {

@@ -1,11 +1,11 @@
 {
   "name": "@lyeve-labs/client-realtime",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Realtime clients for LyEve Core - WebSocket pub/sub and Server-Sent Events",
   "license": "MIT",
   "author": "LyEve <info@lyeve.com>",
   "type": "module",
-  "packageManager": "pnpm@10.33.4",
+  "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": ">=20"
   },
