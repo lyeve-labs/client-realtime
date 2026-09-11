@@ -4,6 +4,14 @@
   "description": "Realtime clients for LyEve Core - WebSocket pub/sub and Server-Sent Events",
   "license": "MIT",
   "author": "LyEve <info@lyeve.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyeve-labs/client-realtime.git"
+  },
+  "homepage": "https://github.com/lyeve-labs/client-realtime#readme",
+  "bugs": {
+    "url": "https://github.com/lyeve-labs/client-realtime/issues"
+  },
   "type": "module",
   "packageManager": "pnpm@11.25.0",
   "engines": {
