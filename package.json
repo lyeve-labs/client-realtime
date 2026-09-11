@@ -35,13 +35,15 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && publint && node scripts/check-dist.mjs",
+    "build": "pnpm version:check && tsup && publint && node scripts/check-dist.mjs",
+    "version:check": "node scripts/check-version.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "dev": "tsup --watch",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "tsup": "^8.4.0",
