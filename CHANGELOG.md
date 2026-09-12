@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2026-09-12
+
+### Fixed
+
+- The package manifest carries `repository`, `homepage` and `bugs`, so the npm
+  page links back to the source and the issue tracker. It published with none
+  of the three, which left a reader on npm with no way back to the code.
+
+### Changed
+
+- The declared Node floor is 24. Continuous integration has run on Node 24 for
+  some time and the manifest still said 20, which described a runtime nothing
+  was tested against. Node 22 consumers are no longer within the declared
+  range.
+- `prepublishOnly` runs the build, so a publish cannot skip the package lint,
+  the dist check or the version check. All three ran only from the build
+  script before, and a bare publish uploaded whatever `dist` happened to hold.
+  The version check refuses when `package.json` and the CHANGELOG head name
+  different versions.
+
 ## [0.1.10] - 2026-09-09
 
 ### Changed
