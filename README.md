@@ -14,16 +14,22 @@ import { createWSClient, SSEClient } from "@lyeve-labs/client-realtime";
 
 // WebSocket pub/sub
 const ws = createWSClient({
-  baseUrl: "http://localhost:3001",
+  baseUrl: "http://localhost:3002",
   topic: "content:articles",
 });
 ws.on("message", (data) => console.log(data));
 ws.connect();
 
 // Server-Sent Events
-const sse = new SSEClient({ baseUrl: "http://localhost:3001" });
+const sse = new SSEClient({
+  baseUrl: "http://localhost:3002",
+  options: { onEvent: (event) => console.log(event.topic, event.action) },
+});
 sse.connect();
 ```
+
+Both transports live on the engine's API port (3002 by default), not the admin
+port.
 
 Two transports, one package. Reconnect, filter, stream.
 
@@ -33,15 +39,16 @@ Two transports, one package. Reconnect, filter, stream.
 
 - **WebSocket pub/sub:** topic-based messaging with auto-reconnect and exponential
   backoff.
-- **SSE client:** lifecycle event stream with `event_type` and `schema` filtering.
+- **SSE client:** content, schema, presence and flow events, subscribed by topic.
 - **Connection guards:** re-entrant `connect()` is safe. Guards check both
   `connected` and `connecting` states.
 - **Event buffer:** SSE client keeps the last 200 events in a rolling buffer.
-- **Status tracking:** `status`, `latestEvent`, `lastError` available on every client.
+- **Status tracking:** `status` and `lastError` on both clients; the SSE client
+  also keeps `latestEvent`.
 
 ## Requirements
 
-- **Node 20** or newer
+- **Node 24** or newer
 
 ## Install
 
@@ -59,7 +66,7 @@ pnpm add @lyeve-labs/client-realtime
 import { createWSClient } from "@lyeve-labs/client-realtime";
 
 const ws = createWSClient({
-  baseUrl: "http://localhost:3001",
+  baseUrl: "http://localhost:3002",
   topic: "content:articles",
   token: sessionToken,
   // optional overrides:
@@ -97,14 +104,14 @@ and it is gone.
 import { SSEClient } from "@lyeve-labs/client-realtime";
 
 const sse = new SSEClient({
-  baseUrl: "http://localhost:3001",
+  baseUrl: "http://localhost:3002",
   options: {
     filter: {
-      event_types: ["after_create", "after_update"],
       schemas: ["articles"],
+      topics: ["schema:changed"],
     },
     onEvent: (event) => {
-      console.log(event.event_type, event.schema, event.record_id);
+      console.log(event.topic, event.schema, event.action, event.record_id);
     },
   },
 });
@@ -112,6 +119,26 @@ const sse = new SSEClient({
 sse.connect();
 // Later: sse.disconnect();
 ```
+
+The server names every frame after the topic it was published on, and the
+client listens for exactly the topics it subscribed to:
+
+| Topic            | Carries                                                                  |
+| ---------------- | ------------------------------------------------------------------------ |
+| `*`              | every content and schema event, and every flow push                      |
+| `content:<name>` | `{ schema, action, record_id }` for one content schema                   |
+| `schema:changed` | `{ schema, action }` when a schema is created                            |
+| `presence`       | `{ action, user_id, email?, display_name? }` when a user joins or leaves |
+| any flow topic   | the payload a flow published to that topic                               |
+
+`action` is `create`, `update` or `delete`. `filter.schemas` subscribes to
+`content:<name>` for each name and `filter.topics` names topics directly. With
+neither, the stream subscribes to `*`. The server takes at most 32 topics. Subscribing to `*` and to a topic it
+covers delivers each of those events twice.
+
+`EventSource` cannot send an `Authorization` header, so the stream
+authenticates with the session cookie (`withCredentials` is on) and the server
+refuses an `Origin` outside its CORS allowlist.
 
 ## API
 
@@ -127,13 +154,13 @@ sse.connect();
 
 ### SSEClient
 
-| Endpoint                  | Description                            |
-| ------------------------- | -------------------------------------- |
-| `/api/v1/realtime/events` | SSE stream of HookBus lifecycle events |
-| `/api/admin/events`       | Admin-scoped event stream              |
+| Endpoint                          | Description                                 |
+| --------------------------------- | ------------------------------------------- |
+| `/api/v1/realtime/events?topic=X` | SSE stream of the named topics (repeatable) |
 
 - `connect()` / `disconnect()`. Manage connection lifecycle
-- Optional filter: `event_types` and/or `schemas`
+- Optional filter: `schemas` and/or `topics`
+- `onEvent(event)` receives a `RealtimeEvent`: the payload's fields plus `topic`
 - Auto-reconnects with exponential backoff
 - `events` buffer (capped at 200), `latestEvent`, `status`, `lastError`
 
