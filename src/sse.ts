@@ -1,36 +1,38 @@
 /**
- * Framework-agnostic SSE client for LyEve CMS lifecycle events.
+ * Framework-agnostic SSE client for the LyEve realtime event stream.
  *
- * Connects to /api/v1/realtime/events for Server-Sent Events streaming
- * with topic filtering and presence. Also usable with /api/admin/events.
+ * Connects to /api/v1/realtime/events on the API port. The server writes every
+ * event as a named SSE frame whose name is the topic it was published on
+ * (`event: *`, `event: content:articles`), so the client registers a listener
+ * per subscribed topic. EventSource never delivers a named frame to
+ * `onmessage`.
  */
 
-export type HookEventType =
-  | "before_create"
-  | "after_create"
-  | "before_update"
-  | "after_update"
-  | "before_delete"
-  | "after_delete"
-  | "before_request"
-  | "after_response";
-
-export interface HookBusEvent {
-  event_type: HookEventType;
-  schema: string;
+/**
+ * One event from the stream. Content events carry `schema`, `action`
+ * ("create", "update" or "delete") and `record_id`; a schema creation carries
+ * `schema` and `action`; presence and flow events carry their own fields.
+ */
+export interface RealtimeEvent {
+  /** The topic the frame was delivered on, which is its SSE event name. */
+  topic: string;
+  schema?: string;
+  action?: string;
   record_id?: string;
-  instance_id?: string;
-  data: Record<string, unknown>;
-  old_data?: Record<string, unknown> | null;
-  timestamp?: string;
+  [field: string]: unknown;
 }
 
 export type SSEStatus =
   "idle" | "connecting" | "connected" | "disconnected" | "error";
 
+/**
+ * Which topics to subscribe to. `schemas` adds `content:<schema>` for each
+ * name; `topics` names topics directly (`schema:changed`, `presence`, a flow
+ * topic). With neither, the stream carries the catch-all topic `*`.
+ */
 export interface SSEFilter {
-  event_types?: HookEventType[];
   schemas?: string[];
+  topics?: string[];
 }
 
 export interface SSEOptions {
@@ -38,16 +40,19 @@ export interface SSEOptions {
   maxReconnectAttempts?: number;
   reconnectBaseDelay?: number;
   reconnectMaxDelay?: number;
-  onEvent?: (event: HookBusEvent) => void;
+  onEvent?: (event: RealtimeEvent) => void;
   onStatusChange?: (status: SSEStatus) => void;
 }
+
+/** The topic the server subscribes a stream to when the request names none. */
+const CATCH_ALL_TOPIC = "*";
 
 const MAX_EVENT_BUFFER = 200;
 
 export class SSEClient {
   status: SSEStatus = "idle";
-  latestEvent: HookBusEvent | null = null;
-  events: HookBusEvent[] = [];
+  latestEvent: RealtimeEvent | null = null;
+  events: RealtimeEvent[] = [];
   lastError: string | null = null;
   reconnectAttempts = 0;
 
@@ -59,7 +64,7 @@ export class SSEClient {
   #reconnectMaxDelay: number;
   #reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   #mounted = false;
-  #onEvent: ((event: HookBusEvent) => void) | undefined;
+  #onEvent: ((event: RealtimeEvent) => void) | undefined;
   #onStatusChange: ((status: SSEStatus) => void) | undefined;
   #endpoint: string;
 
@@ -89,12 +94,9 @@ export class SSEClient {
     this.#clearReconnectTimer();
     this.#setStatus("connecting");
 
+    const topics = this.#topics();
     const url = new URL(this.#endpoint, this.#baseUrl);
-    const { event_types, schemas } = this.#filter;
-    if (event_types && event_types.length > 0)
-      url.searchParams.set("event_types", event_types.join(","));
-    if (schemas && schemas.length > 0)
-      url.searchParams.set("schemas", schemas.join(","));
+    for (const topic of topics) url.searchParams.append("topic", topic);
 
     const es = new EventSource(url.toString(), { withCredentials: true });
     this.#eventSource = es;
@@ -105,16 +107,8 @@ export class SSEClient {
       this.lastError = null;
     };
 
-    es.onmessage = (msg: MessageEvent<string>) => {
-      try {
-        const event: HookBusEvent = JSON.parse(msg.data);
-        this.latestEvent = event;
-        this.events = [event, ...this.events].slice(0, MAX_EVENT_BUFFER);
-        this.#onEvent?.(event);
-      } catch {
-        /* skip malformed */
-      }
-    };
+    const receive = (msg: MessageEvent<string>) => this.#receive(msg);
+    for (const topic of topics) es.addEventListener(topic, receive);
 
     es.onerror = () => {
       es.close();
@@ -130,6 +124,32 @@ export class SSEClient {
     this.#eventSource?.close();
     this.#eventSource = null;
     this.#setStatus("idle");
+  }
+
+  #topics(): string[] {
+    const { schemas = [], topics = [] } = this.#filter;
+    const all = [...schemas.map((schema) => `content:${schema}`), ...topics];
+    const unique = [...new Set(all.filter((topic) => topic.length > 0))];
+    return unique.length > 0 ? unique : [CATCH_ALL_TOPIC];
+  }
+
+  #receive(msg: MessageEvent<string>): void {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(msg.data);
+    } catch {
+      return;
+    }
+    if (
+      payload === null ||
+      typeof payload !== "object" ||
+      Array.isArray(payload)
+    )
+      return;
+    const event: RealtimeEvent = { ...payload, topic: msg.type };
+    this.latestEvent = event;
+    this.events = [event, ...this.events].slice(0, MAX_EVENT_BUFFER);
+    this.#onEvent?.(event);
   }
 
   #setStatus(s: SSEStatus): void {

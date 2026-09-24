@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { SSEClient } from "../src/sse.js";
-import type { HookBusEvent, SSEStatus } from "../src/sse.js";
+import type { RealtimeEvent, SSEStatus } from "../src/sse.js";
 
 // Mock EventSource
 
@@ -17,6 +17,7 @@ class MockEventSource {
   onerror: ((e: Event) => void) | null = null;
   close = vi.fn();
   withCredentials = false;
+  listeners = new Map<string, Array<(e: MessageEvent<string>) => void>>();
 
   constructor(url: string, eventSourceInitDict?: EventSourceInit) {
     this.url = url;
@@ -32,9 +33,24 @@ class MockEventSource {
     this.onopen?.(new Event("open"));
   }
 
-  /** Simulate a server-sent event. */
+  addEventListener(type: string, fn: (e: MessageEvent<string>) => void): void {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
+  }
+
+  /**
+   * Simulate a server-sent frame the way EventSource dispatches one: a frame
+   * named `type` reaches the listeners for that name, and only an unnamed
+   * frame (type "message") reaches onmessage.
+   */
+  simulateEvent(type: string, data: string): void {
+    const e = { type, data } as MessageEvent<string>;
+    for (const fn of this.listeners.get(type) ?? []) fn(e);
+    if (type === "message") this.onmessage?.(e);
+  }
+
+  /** Simulate a content event on the catch-all topic the server defaults to. */
   simulateMessage(data: string): void {
-    this.onmessage?.({ data } as MessageEvent<string>);
+    this.simulateEvent("*", data);
   }
 
   /** Simulate a connection error. */
@@ -46,7 +62,7 @@ class MockEventSource {
 // Tests
 
 describe("SSEClient", () => {
-  const baseUrl = "http://localhost:3001";
+  const baseUrl = "http://localhost:3002";
 
   beforeEach(() => {
     MockEventSource.instances = [];
@@ -83,32 +99,32 @@ describe("SSEClient", () => {
       const client = new SSEClient({ baseUrl });
       client.connect();
 
-      expect(latestEs().url).toBe(
-        "http://localhost:3001/api/v1/realtime/events",
+      const url = new URL(latestEs().url);
+      expect(url.origin + url.pathname).toBe(
+        "http://localhost:3002/api/v1/realtime/events",
       );
     });
 
     it("uses custom endpoint when specified", () => {
-      const client = new SSEClient({ baseUrl, endpoint: "/api/admin/events" });
-      client.connect();
-
-      expect(latestEs().url).toBe("http://localhost:3001/api/admin/events");
-    });
-
-    it("builds URL with event_types filter param", () => {
-      const client = new SSEClient({
-        baseUrl,
-        options: { filter: { event_types: ["after_create", "after_update"] } },
-      });
+      const client = new SSEClient({ baseUrl, endpoint: "/stream/events" });
       client.connect();
 
       const url = new URL(latestEs().url);
-      expect(url.searchParams.get("event_types")).toBe(
-        "after_create,after_update",
+      expect(url.origin + url.pathname).toBe(
+        "http://localhost:3002/stream/events",
       );
     });
 
-    it("builds URL with schemas filter param", () => {
+    it("subscribes to the catch-all topic when no filter is given", () => {
+      const client = new SSEClient({ baseUrl });
+      client.connect();
+
+      const url = new URL(latestEs().url);
+      expect(url.searchParams.getAll("topic")).toEqual(["*"]);
+      expect([...latestEs().listeners.keys()]).toEqual(["*"]);
+    });
+
+    it("turns schemas into content topics", () => {
       const client = new SSEClient({
         baseUrl,
         options: { filter: { schemas: ["article", "page"] } },
@@ -116,33 +132,45 @@ describe("SSEClient", () => {
       client.connect();
 
       const url = new URL(latestEs().url);
-      expect(url.searchParams.get("schemas")).toBe("article,page");
+      expect(url.searchParams.getAll("topic")).toEqual([
+        "content:article",
+        "content:page",
+      ]);
+      expect([...latestEs().listeners.keys()]).toEqual([
+        "content:article",
+        "content:page",
+      ]);
     });
 
-    it("builds URL with both event_types and schemas filter params", () => {
+    it("adds named topics after the schema topics, once each", () => {
       const client = new SSEClient({
         baseUrl,
         options: {
-          filter: { event_types: ["after_create"], schemas: ["article"] },
+          filter: {
+            schemas: ["article"],
+            topics: ["schema:changed", "content:article", "presence"],
+          },
         },
       });
       client.connect();
 
       const url = new URL(latestEs().url);
-      expect(url.searchParams.get("event_types")).toBe("after_create");
-      expect(url.searchParams.get("schemas")).toBe("article");
+      expect(url.searchParams.getAll("topic")).toEqual([
+        "content:article",
+        "schema:changed",
+        "presence",
+      ]);
     });
 
-    it("omits query params when filter arrays are empty", () => {
+    it("falls back to the catch-all topic when filter arrays are empty", () => {
       const client = new SSEClient({
         baseUrl,
-        options: { filter: { event_types: [], schemas: [] } },
+        options: { filter: { schemas: [], topics: [""] } },
       });
       client.connect();
 
       const url = new URL(latestEs().url);
-      expect(url.searchParams.has("event_types")).toBe(false);
-      expect(url.searchParams.has("schemas")).toBe(false);
+      expect(url.searchParams.getAll("topic")).toEqual(["*"]);
     });
 
     it("sets withCredentials on EventSource", () => {
@@ -183,50 +211,82 @@ describe("SSEClient", () => {
       expect(onStatusChange).toHaveBeenCalledWith("connected");
     });
 
-    it("processes incoming messages as HookBusEvent", () => {
+    it("delivers a named frame to onEvent with its topic", () => {
       const onEvent = vi.fn();
       const client = new SSEClient({ baseUrl, options: { onEvent } });
       client.connect();
       latestEs().simulateOpen();
 
-      const eventData: HookBusEvent = {
-        event_type: "after_create",
-        schema: "article",
-        record_id: "rec-1",
-        instance_id: "inst-1",
-        data: { title: "Hello World" },
-        old_data: null,
-        timestamp: "2026-07-22T12:00:00Z",
-      };
-      latestEs().simulateMessage(JSON.stringify(eventData));
+      latestEs().simulateEvent(
+        "*",
+        JSON.stringify({
+          schema: "article",
+          action: "create",
+          record_id: "rec-1",
+        }),
+      );
 
-      expect(client.latestEvent).toEqual(eventData);
-      expect(client.events).toHaveLength(1);
-      expect(client.events[0]).toEqual(eventData);
-      expect(onEvent).toHaveBeenCalledWith(eventData);
+      const expected: RealtimeEvent = {
+        topic: "*",
+        schema: "article",
+        action: "create",
+        record_id: "rec-1",
+      };
+      expect(client.latestEvent).toEqual(expected);
+      expect(client.events).toEqual([expected]);
+      expect(onEvent).toHaveBeenCalledWith(expected);
+    });
+
+    it("delivers frames named after a subscribed schema topic", () => {
+      const onEvent = vi.fn();
+      const client = new SSEClient({
+        baseUrl,
+        options: { filter: { schemas: ["article"] }, onEvent },
+      });
+      client.connect();
+
+      latestEs().simulateEvent(
+        "content:article",
+        JSON.stringify({ schema: "article", action: "delete", record_id: "r" }),
+      );
+      latestEs().simulateEvent("*", JSON.stringify({ schema: "page" }));
+
+      expect(onEvent).toHaveBeenCalledOnce();
+      expect(onEvent.mock.calls[0][0].topic).toBe("content:article");
+    });
+
+    it("ignores unnamed frames, which the server never sends", () => {
+      const onEvent = vi.fn();
+      const client = new SSEClient({ baseUrl, options: { onEvent } });
+      client.connect();
+
+      latestEs().simulateEvent("message", JSON.stringify({ schema: "a" }));
+
+      expect(onEvent).not.toHaveBeenCalled();
     });
 
     it("appends events in reverse-chronological order (newest first)", () => {
       const client = new SSEClient({ baseUrl });
       client.connect();
 
-      const ev1: HookBusEvent = {
-        event_type: "after_create",
-        schema: "a",
-        data: { seq: 1 },
-      };
-      const ev2: HookBusEvent = {
-        event_type: "after_update",
-        schema: "b",
-        data: { seq: 2 },
-      };
-
-      latestEs().simulateMessage(JSON.stringify(ev1));
-      latestEs().simulateMessage(JSON.stringify(ev2));
+      latestEs().simulateMessage(JSON.stringify({ schema: "a", seq: 1 }));
+      latestEs().simulateMessage(JSON.stringify({ schema: "b", seq: 2 }));
 
       expect(client.events).toHaveLength(2);
-      expect(client.events[0].data).toEqual({ seq: 2 }); // newest first
-      expect(client.events[1].data).toEqual({ seq: 1 });
+      expect(client.events[0].seq).toBe(2); // newest first
+      expect(client.events[1].seq).toBe(1);
+    });
+
+    it("ignores a payload that is not a JSON object", () => {
+      const onEvent = vi.fn();
+      const client = new SSEClient({ baseUrl, options: { onEvent } });
+      client.connect();
+
+      latestEs().simulateMessage("[1,2]");
+      latestEs().simulateMessage("null");
+
+      expect(client.events).toEqual([]);
+      expect(onEvent).not.toHaveBeenCalled();
     });
 
     it("ignores malformed JSON messages", () => {
@@ -313,11 +373,7 @@ describe("SSEClient", () => {
 
       // Receive an event
       latestEs().simulateMessage(
-        JSON.stringify({
-          event_type: "after_create",
-          schema: "x",
-          data: {},
-        } satisfies HookBusEvent),
+        JSON.stringify({ schema: "x", action: "create", record_id: "r" }),
       );
       expect(client.latestEvent).not.toBeNull();
 
