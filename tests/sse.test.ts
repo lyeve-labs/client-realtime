@@ -319,7 +319,7 @@ describe("SSEClient", () => {
       client.connect();
       latestEs().simulateOpen();
 
-      client.connect(); // second call - no-op
+      client.connect(); // second call: no-op
 
       expect(MockEventSource.instances.length).toBe(1);
     });
