@@ -95,7 +95,7 @@ describe("WSClient", () => {
 
       handler.mockClear();
 
-      // remove - handler should no longer fire
+      // remove: handler should no longer fire
       client.off("message", handler);
       latestWs().simulateMessage(JSON.stringify({ type: "test2" }));
       expect(handler).not.toHaveBeenCalled();
@@ -196,7 +196,7 @@ describe("WSClient", () => {
       client.connect();
       latestWs().simulateOpen();
 
-      client.connect(); // second call - should be a no-op
+      client.connect(); // second call: should be a no-op
 
       expect(MockWebSocket.instances.length).toBe(1);
     });
