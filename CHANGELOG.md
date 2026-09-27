@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation and shipped strings no longer carry em dashes, unicode
   ellipses or unicode bullets. Where a string is an error or a log line the
   wording changed and nothing else: status codes, machine-readable error codes
-  and behaviour are untouched, so a client matching on a code is unaffected.
+  and behavior are untouched, so a client matching on a code is unaffected.
 - An elision inside a code span now uses three ASCII periods, so a reader who
   copies one gets something their tool accepts.
 
