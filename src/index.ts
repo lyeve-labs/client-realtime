@@ -1,4 +1,4 @@
-// Realtime clients for LyEve CMS - WebSocket pub/sub and Server-Sent Events.
+// Realtime clients for LyEve CMS: WebSocket pub/sub and Server-Sent Events.
 
 export { createWSClient, WSClient } from "./ws.js";
 export type { WSClientConfig, WSStatus } from "./ws.js";
