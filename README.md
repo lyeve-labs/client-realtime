@@ -43,7 +43,7 @@ Two transports, one package. Reconnect, filter, stream.
 - **Connection guards:** re-entrant `connect()` is safe. Guards check both
   `connected` and `connecting` states.
 - **Event buffer:** SSE client keeps the last 200 events in a rolling buffer.
-- **Status tracking:** `status` and `lastError` on both clients; the SSE client
+- **Status tracking:** `status` and `lastError` on both clients. The SSE client
   also keeps `latestEvent`.
 
 ## Requirements
@@ -95,7 +95,7 @@ Sec-WebSocket-Protocol: lyeve.v1, lyeve.bearer.<token>
 The server selects `lyeve.v1` in its response, which is what makes the browser
 accept the handshake. Query strings are written to proxy access logs, kept in
 browser history and sent on in `Referer`, so a credential must not travel in
-one. Earlier releases of this package put it there; the server never read it,
+one. Earlier releases of this package put it there. The server never read it,
 and it is gone.
 
 ### SSE
@@ -186,7 +186,7 @@ tests/               # vitest test suite
 ## Versioning
 
 `@lyeve-labs/client-realtime` follows [SemVer](https://semver.org). While under `1.0`,
-breaking changes bump the **minor** version; additive changes bump the **patch**.
+breaking changes bump the **minor** version. Additive changes bump the **patch**.
 Every release is logged in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Contributing
