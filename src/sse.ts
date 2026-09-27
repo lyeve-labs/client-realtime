@@ -10,8 +10,8 @@
 
 /**
  * One event from the stream. Content events carry `schema`, `action`
- * ("create", "update" or "delete") and `record_id`; a schema creation carries
- * `schema` and `action`; presence and flow events carry their own fields.
+ * ("create", "update" or "delete") and `record_id`. A schema creation carries
+ * `schema` and `action`. Presence and flow events carry their own fields.
  */
 export interface RealtimeEvent {
   /** The topic the frame was delivered on, which is its SSE event name. */
@@ -27,7 +27,7 @@ export type SSEStatus =
 
 /**
  * Which topics to subscribe to. `schemas` adds `content:<schema>` for each
- * name; `topics` names topics directly (`schema:changed`, `presence`, a flow
+ * name. `topics` names topics directly (`schema:changed`, `presence`, a flow
  * topic). With neither, the stream carries the catch-all topic `*`.
  */
 export interface SSEFilter {
