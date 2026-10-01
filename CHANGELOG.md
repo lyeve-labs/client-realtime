@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-01
+
+### Fixed
+
+- `SSEClient` delivers events. The server names every SSE frame after its
+  topic (`event: *`, `event: content:articles`), and `EventSource` hands a
+  named frame only to a listener registered for that name, never to
+  `onmessage`, so `onEvent` never fired and `events` stayed empty. The client
+  now registers a listener for each topic it subscribes to.
+- The subscription is sent as the `topic` query parameter the server reads.
+  `filter.schemas` becomes one `content:<name>` topic each, and with no filter
+  the stream subscribes to the catch-all topic `*`.
+
+### Added
+
+- `filter.topics` names topics directly, such as `schema:changed`, `presence`
+  or a topic a flow publishes to.
+
+### Changed
+
+- Events are typed as `RealtimeEvent`: the payload the server sent, plus the
+  `topic` it arrived on. Content events carry `schema`, `action` and
+  `record_id`.
+- The README points both transports at the API port, which is where the
+  engine serves `/api/v1`. It named the admin port, where both paths are 404.
+
+### Removed
+
+- `HookBusEvent`, `HookEventType` and `filter.event_types`. The server never
+  read `event_types` and never sent the `HookBusEvent` shape.
+
 ## [0.1.11] - 2026-09-12
 
 ### Fixed
@@ -32,11 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation and shipped strings no longer carry em dashes, unicode
   ellipses or unicode bullets. Where a string is an error or a log line the
   wording changed and nothing else: status codes, machine-readable error codes
-  and behaviour are untouched, so a client matching on a code is unaffected.
+  and behavior are untouched, so a client matching on a code is unaffected.
 - An elision inside a code span now uses three ASCII periods, so a reader who
   copies one gets something their tool accepts.
-
-## [Unreleased]
 
 ## [0.1.9] - 2026-09-02
 
