@@ -3,8 +3,8 @@
 ## Quick start
 
 ```bash
-git clone git@github.com:lyeve-labs/cms-client-realtime.git
-cd cms-client-realtime
+git clone https://github.com/lyeve-labs/client-realtime.git
+cd client-realtime
 pnpm install
 pnpm test         # verify everything works
 ```
