@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-10-22
+
+### Changed
+
+- The package is developed, tested and built on Node 26.12.1 with pnpm 11.25.0 only. It still supports Node 24 or later and any package manager for the people who install it, and its built output is unchanged.
+
+### Security
+
+- The development tools moved past every advisory pnpm audit reported, vitest and Vite among them. None of them ships in the package.
+
 ## [0.2.0] - 2026-10-01
 
 ### Fixed
