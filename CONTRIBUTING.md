@@ -11,8 +11,11 @@ pnpm test         # verify everything works
 
 You'll need:
 
-- **Node 20** or newer
-- **pnpm 9.15** (the `packageManager` field pins it)
+- **Node 26.12.1**, the version `mise.toml` pins and CI runs
+- **pnpm 11.25.0** (the `packageManager` field pins it)
+
+pnpm is the only package manager for working on this repository. The published
+package still supports Node 24 or newer, installed with any package manager.
 
 ## Repository layout
 
