@@ -22,7 +22,7 @@ body:
     attributes:
       label: Runtime
       description: Node.js version and environment (browser, server, etc.).
-      placeholder: "Node 20.x, browser (Chrome 130)"
+      placeholder: "Node 24.x, browser (Chrome 130)"
     validations:
       required: true
 
